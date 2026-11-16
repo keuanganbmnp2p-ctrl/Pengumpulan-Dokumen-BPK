@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Unggah Dokumen Pemeriksaan LK</title>
+<style>
+/* Halaman satker: kartu masuk, lalu daftar dokumen per kategori dengan tombol unggah di tiap dokumen. Tanpa sumber luar agar aman di jaringan kantor. */
+:root{
+  --bg:#f3f6f8; --surface:#ffffff; --surface2:#e9eff3; --fg:#14202b; --muted:#566673; --line:#d5dee5;
+  --accent:#0a6c8f; --accent-fg:#ffffff;
+  --good:#17804f; --good-bg:#d9f0e4; --warn:#9a6208; --warn-bg:#faecc9; --bad:#b3301f; --bad-bg:#fbe3df;
+  --na:#6d7b87; --na-bg:#e3e8ec;
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --font-mono:ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0e1a22; --surface:#15232d; --surface2:#1c2e3a; --fg:#e5edf2; --muted:#93a4b1; --line:#294050;
+    --accent:#52bde0; --accent-fg:#05222d;
+    --good:#52cc95; --good-bg:#173a2c; --warn:#e6b450; --warn-bg:#3a2e12; --bad:#f08575; --bad-bg:#43201b;
+    --na:#8a98a3; --na-bg:#25343f; color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 var(--font-body);padding:20px 16px 60px}
+button,select,input{font:inherit;color:inherit}
+button,label.btn{cursor:pointer}
+:focus-visible,label.btn:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.mono{font-family:var(--font-mono);font-size:13px}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.eyebrow{margin:0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{margin:2px 0 0;font-size:25px;line-height:1.25;text-wrap:balance}
+.sub{margin:6px 0 0;color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px}
+
+.login{max-width:440px;margin:6vh auto 0;display:flex;flex-direction:column;gap:14px;width:100%}
+.login label{display:flex;flex-direction:column;gap:5px;font-weight:600;font-size:14px}
+.login input{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-weight:400}
+.err{margin:0;color:var(--bad);min-height:1.4em}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 13px;font-weight:600;font-size:14px;position:relative}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn[disabled],.btn.dis{opacity:.5;cursor:not-allowed;pointer-events:none}
+.lnk{border:0;background:transparent;color:var(--bad);padding:0;font-size:13px;text-decoration:underline}
+
+.bar-top{display:flex;flex-wrap:wrap;gap:12px 20px;justify-content:space-between;align-items:flex-start}
+.who{display:flex;flex-direction:column;gap:2px}
+.who b{font-size:18px}
+.ctl{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.ctl label{display:inline-flex;gap:6px;align-items:center;color:var(--muted);font-size:14px}
+select{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+.sum{display:flex;flex-direction:column;gap:8px}
+.sum .row{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline}
+.sum b{font-size:28px;font-variant-numeric:tabular-nums}
+.bar{height:10px;background:var(--surface2);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .3s}
+.bar i.full{background:var(--good)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:transparent;padding:6px 12px;color:var(--muted);font-weight:600;font-size:13.5px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.note{margin:0;font-size:13px;color:var(--muted)}
+
+details.cat{background:var(--surface);border:1px solid var(--line);border-radius:12px}
+details.cat+details.cat{margin-top:10px}
+details.cat>summary{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;list-style:none}
+details.cat>summary::-webkit-details-marker{display:none}
+details.cat>summary::before{content:"▸";color:var(--muted)}
+details.cat[open]>summary::before{transform:rotate(90deg)}
+.cc{width:26px;height:26px;border-radius:6px;background:var(--surface2);display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+.cn{font-weight:700;flex:1;min-width:0}
+.cr{color:var(--muted);font-variant-numeric:tabular-nums}
+.its{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.it{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.it:last-child{border-bottom:0}
+.itx{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.itx .tx{flex:1;min-width:0}
+.no{font-family:var(--font-mono);font-size:12.5px;color:var(--accent);margin-right:6px;white-space:nowrap;font-weight:700}
+.chip{font-size:12px;font-weight:700;border-radius:99px;padding:2px 10px;white-space:nowrap}
+.chip.v0{background:var(--bad-bg);color:var(--bad)}
+.chip.v1{background:var(--good-bg);color:var(--good)}
+.chip.v2{background:var(--na-bg);color:var(--na)}
+.files{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.files li{display:flex;flex-wrap:wrap;gap:2px 12px;align-items:baseline;background:var(--surface2);border-radius:8px;padding:6px 10px}
+.fn{font-weight:600;word-break:break-word;min-width:0}
+.fm{color:var(--muted);font-size:12.5px}
+.acts{display:flex;flex-wrap:wrap;gap:8px}
+.im{margin:0;font-size:13.5px;color:var(--muted)}
+.im.er{color:var(--bad)}
+.empty{text-align:center;color:var(--muted);padding:28px 0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:var(--fg);color:var(--bg);padding:9px 16px;border-radius:8px;max-width:calc(100% - 32px);opacity:0;pointer-events:none;transition:opacity .2s;z-index:9}
+.toast.on{opacity:1}
+@media (max-width:520px){h1{font-size:21px}.itx{flex-direction:column}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<section class="card login" id="login">
+  <div>
+    <p class="eyebrow">Ditjen P2 · Kementerian Kesehatan RI</p>
+    <h1>Unggah Dokumen Pemeriksaan LK</h1>
+    <p class="sub">Masuk dengan kode satker dan password yang sama dengan aplikasi Prosedur Analitik.</p>
+  </div>
+  <form id="lf" class="login" style="margin:0;max-width:none;gap:14px">
+    <label>Kode satker<input id="lk" inputmode="numeric" autocomplete="username" required></label>
+    <label>Password<input id="lp" type="password" autocomplete="current-password" required></label>
+    <p class="err" id="lerr" role="alert"></p>
+    <button class="btn pri" id="lbtn" type="submit" style="justify-content:center">Masuk</button>
+  </form>
+</section>
+
+<div id="app" hidden>
+  <header class="card bar-top">
+    <div class="who">
+      <p class="eyebrow">Pemeriksaan LK Kemenkes</p>
+      <b id="wn"></b>
+      <span class="mono muted" id="wk"></span>
+    </div>
+    <div class="ctl">
+      <label>Periode <select id="per" aria-label="Periode"></select></label>
+      <label>Tahun <select id="yr" aria-label="Tahun"></select></label>
+      <button class="btn" type="button" data-a="logout">Keluar</button>
+    </div>
+  </header>
+
+  <section class="card sum" aria-live="polite">
+    <div class="row"><span id="sumtxt"></span><b id="sumpct"></b></div>
+    <div class="bar"><i id="sumbar"></i></div>
+    <p class="note">Maksimal 15 MB per berkas. Format yang diterima: PDF, Excel, Word, gambar, TXT, CSV, ZIP, RAR, 7Z. Satu dokumen boleh berisi lebih dari satu berkas. Dokumen bertanda "jika ada" yang memang tidak ada dapat ditandai Tidak berlaku. Jangan menutup halaman saat berkas sedang diunggah.</p>
+    <div><div class="seg" role="group" aria-label="Tampilkan">
+      <button type="button" data-a="flt" data-v="all" aria-pressed="true">Semua</button>
+      <button type="button" data-a="flt" data-v="belum" aria-pressed="false">Belum dikirim</button>
+      <button type="button" data-a="flt" data-v="sudah" aria-pressed="false">Sudah</button>
+    </div></div>
+  </section>
+
+  <div id="list"></div>
+</div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+/* Isi dengan URL Web App hasil deployment Apps Script (berakhiran /exec). */
+var API_URL='https://script.google.com/macros/s/AKfycbyk4WDK9iBqkV4tQUwJcXH61c5fCw58aOFByt-0xGugdyvjoMY2VXOgeY1b1CgX8iORaA/exec';
+var MAX_MB=15;
+var EXT_OK=['pdf','xls','xlsx','xlsm','csv','doc','docx','jpg','jpeg','png','zip','rar','7z','txt'];
+var PERIODS=[['interim','Interim'],['unaudited','Unaudited'],['audited','Audited']];
+var YEARS=[2026,2027,2028,2029,2030];
+var CATS=[
+['A','Data Umum',[
+ 'Laporan Keuangan Tahun {Y} ({LK})',
+ 'Laporan Barang Milik Negara (BMN) Tahun {Y} ({BMN})',
+ 'SK Pengangkatan KPA, PPK, Pokja Pengadaan/ULP, Panitia Penerima Hasil Pekerjaan (jika masih ada), Pejabat Penandatangan SPM, Bendahara Pengeluaran, Bendahara Penerimaan dan PUM atas kegiatan Tahun {Y}',
+ 'DIPA Tahun {Y} lengkap dengan revisinya',
+ 'RKA-KL dan/atau Petunjuk Operasional Kegiatan (POK) Tahun {Y}, lengkap dengan revisinya',
+ 'Daftar Rekening Bendaharawan dan Rekening Penampungan Lainnya Tahun {Y}',
+ 'Surat persetujuan pembukaan rekening',
+ 'Struktur Organisasi Satker dan SK Tim Kerja',
+ 'Bezetting Pegawai per {BEZ} Tahun {Y}',
+ 'Daftar nomor telepon/extensi/HP pegawai terkait pengelolaan keuangan Tahun {Y}']],
+['B','Kas di Bendahara Penerimaan dan Pendapatan',[
+ 'SOP terkait Kas di Bendahara Penerimaan',
+ 'BKU Bendahara Penerimaan dan Buku Pembantunya (Buku Pajak, Buku Uang Muka, dll.) s.d. {D}',
+ 'Laporan Pertanggungjawaban Bendahara Penerimaan',
+ 'Rekap Realisasi Pendapatan Tahun {Y} dan Rinciannya',
+ 'Rincian dan bukti setor atas Penerimaan Kembali Belanja Barang TAYL Tahun {Y}',
+ 'Rekening koran Bendahara TA {Y}',
+ 'Berita Acara Penutupan/Pemeriksaan Kas TA {Y}']],
+['C','Kas di Bendahara Pengeluaran',[
+ 'SOP terkait Kas di Bendahara Pengeluaran',
+ 'BKU Bendahara Pengeluaran dan Buku Pembantunya (Buku Pajak, Buku Uang Muka, dll.) s.d. {D}',
+ 'Laporan Pertanggungjawaban Bendahara Pengeluaran TA {Y}',
+ 'Berita Acara Penutupan/Pemeriksaan Kas TA {Y}',
+ 'Rekening Koran TA {Y}',
+ 'Bukti Setor Sisa UP/TUP TA {Y}']],
+['D','Belanja Pegawai',[
+ 'Daftar pegawai yang pensiun/meninggal/mutasi/tugas belajar/diberhentikan masuk dan keluar TA {Y} dan SK terkait',
+ 'SOP tentang Belanja Pegawai (Gaji, Tukin, Tunjangan, Transito)',
+ 'Dokumen Pembayaran Belanja Gaji Pegawai TA {Y}',
+ 'Dokumen Pembayaran Belanja Tunjangan Kinerja TA {Y} dan kertas kerja perhitungan',
+ 'Dokumen Pembayaran Belanja Gaji Pegawai Transito TA {Y} (jika ada)',
+ 'Daftar pemberhentian tunjangan keluarga beserta dokumen pendukungnya TA {Y}']],
+['E','Belanja Barang, Bantuan Sosial, dan Modal',[
+ 'Daftar Pengadaan Barang dan Jasa Tahun {Y} dengan format pada Lampiran 2 s.d. Lampiran 3 dan atau menggunakan data dari ULP',
+ 'Daftar bantuan sosial yang disalurkan Tahun {Y} beserta dokumen pendukung',
+ 'Daftar rekening penampungan penyaluran bantuan sosial (jika ada)',
+ 'Daftar Jaminan Pelaksanaan (bank garansi) per {D}, beserta tanggal pencairan, dan dokumen pendukung (jika ada pekerjaan yang masih menggunakan mekanisme bank garansi)',
+ 'Data saldo atas Dana di Rekening Penampungan K/L dan Pendapatan Denda per {D}']],
+['F','Piutang',[
+ 'SOP terkait pengelolaan piutang',
+ 'Dokumen Piutang (Kartu Piutang, Daftar Rekapitulasi Piutang, Umur Piutang, Penyisihan Piutang, dan dokumen pendukung)',
+ 'Rincian penghapusan piutang dan dokumen pendukungnya',
+ 'Rincian crash program piutang dan dokumen pendukungnya']],
+['G','Persediaan',[
+ 'SOP terkait pengelolaan persediaan',
+ 'Laporan mutasi dan posisi persediaan per {D} (softcopy excel)',
+ 'Rincian Persediaan per {D} dari aplikasi SAKTI',
+ 'BA penitipan persediaan dari pihak lain (jika ada) per {D}',
+ 'Daftar barang persediaan usang/rusak (jika ada) per {D}',
+ 'SK Penghapusan/pemusnahan persediaan rusak/usang tahun {Y}',
+ 'BA Penghapusan dan Pemusnahan Persediaan Rusak/Usang Th {Y}',
+ 'Data transfer masuk/transfer keluar dan penerimaan hibah atas persediaan',
+ 'Rekapitulasi BAST Hibah atas persediaan dari Kemenkes ke pemerintah daerah/masyarakat/pihak lain penerima tahun {Y} dan tahun sebelumnya beserta dokumen pendukungnya',
+ 'Berita Acara Stock Opname']],
+['H','Aset Tetap dan Aset Lainnya',[
+ 'SOP terkait Aset Tetap dan Aset Lainnya',
+ 'Daftar aset tetap yang dimanfaatkan pihak ketiga (disewakan, BOT, dll.) s.d. {D} beserta dokumen perjanjian dan pembayaran di tahun {Y}',
+ 'Daftar aset tetap dalam status penyelesaian masalah hukum dan dokumen pendukungnya (misal, kendaraan hilang) per {D}',
+ 'SK Penghapusan Aset yang terbit selama Tahun {Y}',
+ 'Data Rincian Transfer Masuk Transfer Keluar Aset Tetap dan Aset Lainnya',
+ 'Data Rincian Aset Lainnya per {D}',
+ 'Data Rincian Aset Tak Berwujud per {D}',
+ 'Data Rincian Aset Lain-lain per {D}']],
+['I','Pendapatan Diterima Dimuka',[
+ 'SOP terkait Pendapatan Diterima Dimuka',
+ 'Rincian Pendapatan Diterima Dimuka per {D}',
+ 'Kertas kerja perhitungan pendapatan diterima dimuka beserta dokumen pendukungnya']],
+['J','Hibah',[
+ 'Laporan Pertanggungjawaban Kas dari Hibah Masuk Uang',
+ 'Data penerimaan hibah uang maupun barang Tahun {Y} dan pengesahannya',
+ 'Dokumen pendukung hibah uang dan barang (MoU, registrasi, pengesahan, pengembalian, dll)',
+ 'BKU Hibah Uang dan Buku Pembantu lainnya tahun {Y}',
+ 'Rekening Koran Tahun {Y}']],
+['K','Belanja Dibayar Dimuka',[
+ 'Daftar Rincian Belanja Dibayar Dimuka dan dokumen pendukung (jika ada) tahun {Y}']],
+['L','Utang',[
+ 'SOP terkait pengelolaan Utang',
+ 'Rincian utang dan dokumen pendukung tahun {Y}',
+ 'BA rekonsiliasi utang dengan pihak ketiga per {D}',
+ 'Daftar Utang per 31 Desember {Y1} yang dibayar di Tahun {Y} beserta dokumen pendukung']]
+];
+var A={kode:'',pin:'',nama:'',period:'interim',year:2026,items:{},cats:[],all:[],busy:{},msg:{},arm:null,closed:{},filter:'all'};
+var $=function(s){return document.querySelector(s)};
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function fmtSize(n){n=Number(n)||0;return n>=1048576?(n/1048576).toFixed(1).replace('.',',')+' MB':Math.max(1,Math.round(n/1024))+' KB'}
+function fmtTime(s){var d=new Date(s);return isNaN(d)?'':d.toLocaleString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}
+var toastT=null;
+function toast(t){var e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){e.classList.remove('on')},3200)}
+
+function buildCats(){
+  var y=A.year,per=A.period;
+  var ctx={Y:y,Y1:y-1,
+    D:(per==='interim'?'31 Oktober ':'31 Desember ')+y,
+    LK:per==='interim'?'Triwulan III dan Periode-10':(per==='unaudited'?'Unaudited':'Audited'),
+    BMN:per==='interim'?'Triwulan III':'Tahunan',
+    BEZ:per==='interim'?'Triwulan I, II dan III':'Triwulan I sampai IV'};
+  A.cats=CATS.map(function(c){return {code:c[0],name:c[1],items:c[2].map(function(t,i){
+    return {id:c[0]+(i+1),no:c[0]+'.'+(i+1),text:t.replace(/\{(\w+)\}/g,function(_,k){return ctx[k]})}})}});
+  A.all=[];A.cats.forEach(function(c){c.items.forEach(function(it){A.all.push(it)})});
+}
+
+async function api(body){
+  if(API_URL.indexOf('PASTE')===0)throw new Error('Alamat Web App belum diisi oleh pengelola.');
+  var r;
+  try{r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)})}
+  catch(e){throw new Error('Tidak dapat terhubung ke server. Periksa koneksi internet lalu coba lagi.')}
+  var j;try{j=await r.json()}catch(e){throw new Error('Server memberi respons yang tidak terbaca. Coba lagi beberapa saat.')}
+  if(!j.ok)throw new Error(j.error||'Permintaan gagal.');
+  return j;
+}
+function toB64(f){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){var s=String(r.result);res(s.slice(s.indexOf(',')+1))};r.onerror=function(){rej(new Error('Berkas tidak dapat dibaca.'))};r.readAsDataURL(f)})}
+function base(extra){return Object.assign({kode:A.kode,pin:A.pin,periode:A.period,tahun:A.year},extra)}
+
+function vOf(id){var s=A.items[id];return s&&s.files&&s.files.length?1:(s&&s.na?2:0)}
+function itemHtml(it){
+  var s=A.items[it.id]||{files:[],na:false},v=vOf(it.id),busy=!!A.busy[it.id],m=A.msg[it.id];
+  var h='<li class="it"><div class="itx"><div class="tx"><span class="no">'+it.no+'</span>'+esc(it.text)+'</div>'+
+    ['<span class="chip v0">Belum</span>','<span class="chip v1">Terkirim</span>','<span class="chip v2">Tidak berlaku</span>'][v]+'</div>';
+  if(s.files.length){
+    h+='<ul class="files">'+s.files.map(function(f){
+      return '<li><span class="fn">'+esc(f.nama)+'</span><span class="fm">'+fmtSize(f.ukuran)+' · '+esc(fmtTime(f.waktu))+'</span>'+
+        (f.manual?'<span class="fm">dicatat admin</span>':'<button type="button" class="lnk" data-a="del" data-id="'+it.id+'" data-f="'+esc(f.id)+'"'+(busy?' disabled':'')+'>'+(A.arm===f.id?'Yakin hapus?':'Hapus')+'</button>')+'</li>'}).join('')+'</ul>';
+  }
+  h+='<div class="acts"><label class="btn pri'+(busy?' dis':'')+'">'+(s.files.length?'Tambah berkas':'Unggah berkas')+
+    '<input class="vh" type="file" multiple data-id="'+it.id+'"'+(busy?' disabled':'')+'></label>';
+  if(!s.files.length)h+='<button type="button" class="btn" data-a="na" data-id="'+it.id+'" data-on="'+(s.na?0:1)+'"'+(busy?' disabled':'')+'>'+(s.na?'Batalkan tidak berlaku':'Tidak berlaku')+'</button>';
+  h+='</div>';
+  if(m)h+='<p class="im'+(m.err?' er':'')+'">'+esc(m.t)+'</p>';
+  return h+'</li>';
+}
+function render(){
+  var tot=0,ada=0;
+  A.all.forEach(function(it){var v=vOf(it.id);if(v!==2){tot++;if(v===1)ada++}});
+  var pct=tot?Math.round(ada/tot*100):0;
+  $('#sumtxt').textContent=ada+' dari '+tot+' dokumen sudah dikirim';
+  $('#sumpct').textContent=pct+'%';
+  var bar=$('#sumbar');bar.style.width=pct+'%';bar.className=pct===100?'full':'';
+  document.querySelectorAll('[data-a="flt"]').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.v===A.filter))});
+  var h='';
+  A.cats.forEach(function(c){
+    var a=0,t=0;c.items.forEach(function(it){var v=vOf(it.id);if(v!==2){t++;if(v===1)a++}});
+    var items=c.items.filter(function(it){var v=vOf(it.id);return A.filter==='all'||(A.filter==='belum'&&v===0)||(A.filter==='sudah'&&v!==0)});
+    if(!items.length)return;
+    h+='<details class="cat" data-cat="'+c.code+'"'+(A.closed[c.code]?'':' open')+'><summary><span class="cc">'+c.code+'</span><span class="cn">'+esc(c.name)+'</span><span class="cr">'+a+'/'+t+'</span></summary><ul class="its">'+items.map(itemHtml).join('')+'</ul></details>';
+  });
+  $('#list').innerHTML=h||'<p class="empty">'+(A.filter==='belum'?'Semua dokumen sudah dikirim.':'Tidak ada dokumen untuk ditampilkan.')+'</p>';
+}
+function setMsg(id,t,err){if(t)A.msg[id]={t:t,err:!!err};else delete A.msg[id]}
+
+async function load(){
+  try{var j=await api(base({action:'status'}));A.items=j.items||{};if(j.nama){A.nama=j.nama;$('#wn').textContent=A.nama||('Satker '+A.kode)}}
+  catch(e){if(/salah|terkunci|Kode satker/i.test(e.message)){logout(e.message);return}toast(e.message)}
+  render();
+}
+function showApp(){
+  $('#login').hidden=true;$('#app').hidden=false;
+  $('#wn').textContent=A.nama||('Satker '+A.kode);$('#wk').textContent='Kode satker '+A.kode;
+  buildCats();render();
+}
+function logout(msg){
+  try{sessionStorage.removeItem('pds:sess')}catch(e){}
+  A.kode=A.pin=A.nama='';A.items={};A.busy={};A.msg={};
+  $('#app').hidden=true;$('#login').hidden=false;$('#lp').value='';$('#lerr').textContent=typeof msg==='string'?msg:'';
+}
+async function upload(id,files){
+  A.busy[id]=true;setMsg(id);render();
+  var ok=0,errs=[];
+  for(var i=0;i<files.length;i++){
+    var f=files[i],ext=f.name.indexOf('.')>=0?f.name.split('.').pop().toLowerCase():'';
+    setMsg(id,'Mengunggah '+f.name+' ('+(i+1)+' dari '+files.length+')…');render();
+    if(EXT_OK.indexOf(ext)<0){errs.push(f.name+': jenis berkas tidak diizinkan.');continue}
+    if(f.size>MAX_MB*1048576){errs.push(f.name+': ukuran melebihi '+MAX_MB+' MB.');continue}
+    try{var b64=await toB64(f);await api(base({action:'upload',itemId:id,fileName:f.name,mime:f.type,b64:b64}));ok++}
+    catch(e){errs.push(f.name+': '+e.message)}
+  }
+  A.busy[id]=false;
+  setMsg(id,errs.length?errs.join(' '):(ok?ok+' berkas berhasil diunggah.':''),errs.length>0);
+  await load();
+  if(!errs.length&&ok)setTimeout(function(){if(!A.busy[id]&&A.msg[id]&&!A.msg[id].err){setMsg(id);render()}},4000);
+}
+
+document.addEventListener('click',function(e){
+  var t=e.target.closest('[data-a]');if(!t)return;var a=t.dataset.a;
+  if(a==='logout')logout();
+  else if(a==='flt'){A.filter=t.dataset.v;render()}
+  else if(a==='na'){
+    var id=t.dataset.id;A.busy[id]=true;render();
+    api(base({action:'na',itemId:id,on:t.dataset.on==='1'})).then(function(){A.busy[id]=false;return load()},function(er){A.busy[id]=false;setMsg(id,er.message,true);render()});
+  }else if(a==='del'){
+    var fid=t.dataset.f,iid=t.dataset.id;
+    if(A.arm!==fid){A.arm=fid;render();setTimeout(function(){if(A.arm===fid){A.arm=null;render()}},4000);return}
+    A.arm=null;A.busy[iid]=true;render();
+    api(base({action:'hapus',itemId:iid,fileId:fid})).then(function(){A.busy[iid]=false;setMsg(iid,'Berkas dihapus.');return load()},function(er){A.busy[iid]=false;setMsg(iid,er.message,true);render()});
+  }
+});
+document.addEventListener('change',function(e){
+  var t=e.target;
+  if(t.matches&&t.matches('input[type=file][data-id]')){var fs=Array.prototype.slice.call(t.files);t.value='';if(fs.length)upload(t.dataset.id,fs)}
+  else if(t.id==='per'||t.id==='yr'){
+    if(t.id==='per')A.period=t.value;else A.year=+t.value;
+    try{localStorage.setItem('pds:v',JSON.stringify({p:A.period,y:A.year}))}catch(x){}
+    A.items={};A.msg={};buildCats();render();load();
+  }
+},true);
+document.addEventListener('toggle',function(e){var d=e.target;if(d.matches&&d.matches('details.cat'))A.closed[d.dataset.cat]=!d.open},true);
+$('#lf').addEventListener('submit',async function(e){
+  e.preventDefault();
+  var k=$('#lk').value.trim(),p=$('#lp').value,b=$('#lbtn');
+  b.disabled=true;b.textContent='Memeriksa…';$('#lerr').textContent='';
+  try{
+    var j=await api({action:'login',kode:k,pin:p});
+    A.kode=j.kode;A.pin=p;A.nama=j.nama;
+    try{sessionStorage.setItem('pds:sess',JSON.stringify({k:A.kode,p:p,n:A.nama}))}catch(x){}
+    showApp();await load();
+  }catch(er){$('#lerr').textContent=er.message}
+  b.disabled=false;b.textContent='Masuk';
+});
+window.addEventListener('beforeunload',function(e){if(Object.keys(A.busy).some(function(k){return A.busy[k]})){e.preventDefault();e.returnValue=''}});
+
+/* mulai */
+$('#per').innerHTML=PERIODS.map(function(p){return '<option value="'+p[0]+'">'+p[1]+'</option>'}).join('');
+$('#yr').innerHTML=YEARS.map(function(y){return '<option value="'+y+'">'+y+'</option>'}).join('');
+try{var v=JSON.parse(localStorage.getItem('pds:v')||'null');if(v){if(PERIODS.some(function(p){return p[0]===v.p}))A.period=v.p;if(YEARS.indexOf(v.y)>=0)A.year=v.y}}catch(x){}
+$('#per').value=A.period;$('#yr').value=String(A.year);
+buildCats();
+try{var s=JSON.parse(sessionStorage.getItem('pds:sess')||'null');if(s&&s.k&&s.p){A.kode=s.k;A.pin=s.p;A.nama=s.n||'';showApp();load()}}catch(x){}
+})();
+</script>
+</body>
+</html>
